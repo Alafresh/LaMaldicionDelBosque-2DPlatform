@@ -27,6 +27,6 @@ public class PlayerController : MonoBehaviour
 
     private void Walk(Vector2 direction)
     {
-        _rb2d.linearVelocity = direction * speedMovement;
+        _rb2d.linearVelocity = new Vector2(direction.x * speedMovement, _rb2d.linearVelocity.y);
     }
 }
