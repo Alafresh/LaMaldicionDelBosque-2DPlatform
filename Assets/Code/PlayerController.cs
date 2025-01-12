@@ -3,16 +3,23 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    private Vector2 direction;
+    
     [Header("Stadistics")]
     [SerializeField] float speedMovement = 10;
     [SerializeField] float forceJump = 10;
 
     [Header("Components")]
     [SerializeField] private Rigidbody2D _rb2d;
-    private Vector2 direction;
+
+    [Header("Colisions")]
+    [SerializeField] LayerMask ground;
+    [SerializeField] Vector2 down;
+    [SerializeField] private float radiusDetection;
     
     [Header("Booleans")]
     [SerializeField] bool canMove = true;
+    [SerializeField] bool isGrounded = true;
 
     private void Awake()
     {
@@ -22,6 +29,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         Movement();
+        Grip();
     }
     private void Movement()
     {
@@ -33,7 +41,10 @@ public class PlayerController : MonoBehaviour
         BetterJump();
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Jump();
+            if(isGrounded)
+            {
+                Jump();
+            }
         }
     }
 
@@ -56,7 +67,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-
     private void Walk()
     {
         if(canMove)
@@ -75,5 +85,9 @@ public class PlayerController : MonoBehaviour
                 }
             }
         }
+    }
+    private void Grip()
+    {
+        isGrounded = Physics2D.OverlapCircle((Vector2)transform.position + down, radiusDetection, ground);
     }
 }
