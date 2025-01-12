@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
 
     [Header("Components")]
     [SerializeField] private Rigidbody2D _rb2d;
+    [SerializeField] private Animator _animator;
 
     [Header("Colisions")]
     [SerializeField] LayerMask ground;
@@ -24,6 +25,7 @@ public class PlayerController : MonoBehaviour
     private void Awake()
     {
         _rb2d = GetComponent<Rigidbody2D>();
+        _animator = GetComponent<Animator>();
     }
 
     private void Update()
@@ -43,8 +45,13 @@ public class PlayerController : MonoBehaviour
         {
             if(isGrounded)
             {
+                _animator.SetBool("jumping", true);
                 Jump();
             }
+        }
+        if(isGrounded)
+        {
+            _animator.SetBool("falling", false);
         }
     }
 
@@ -75,6 +82,15 @@ public class PlayerController : MonoBehaviour
 
             if (direction != Vector2.zero)
             {
+                if(!isGrounded)
+                {
+                    _animator.SetBool("falling", true);
+                }
+                else
+                {
+                    _animator.SetBool("walking", true);
+                }
+
                 if (direction.x < 0 && transform.localScale.x > 0)
                 {
                     transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z);
@@ -84,10 +100,19 @@ public class PlayerController : MonoBehaviour
                     transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
                 }
             }
+            else
+            {
+                _animator.SetBool("walking", false);
+            }
         }
     }
     private void Grip()
     {
         isGrounded = Physics2D.OverlapCircle((Vector2)transform.position + down, radiusDetection, ground);
+    }
+    public void JumpFinished()
+    {
+        _animator.SetBool("jumping", false);
+        _animator.SetBool("falling", true);
     }
 }

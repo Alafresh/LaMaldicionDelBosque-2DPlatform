@@ -687,6 +687,7 @@ MonoBehaviour:
   speedMovement: 10
   forceJump: 7.5
   _rb2d: {fileID: 367602574}
+  _animator: {fileID: 367602573}
   ground:
     serializedVersion: 2
     m_Bits: 64
@@ -838,7 +839,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 10
   m_Sprite: {fileID: 21300000, guid: 217a34da322f09a4f915f2ca6befab73, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
