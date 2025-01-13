@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
@@ -8,6 +9,8 @@ public class PlayerController : MonoBehaviour
     [Header("Stadistics")]
     [SerializeField] float speedMovement = 10;
     [SerializeField] float forceJump = 10;
+    [SerializeField] float dashSpeed = 20;
+
 
     [Header("Components")]
     [SerializeField] private Rigidbody2D _rb2d;
@@ -21,6 +24,9 @@ public class PlayerController : MonoBehaviour
     [Header("Booleans")]
     [SerializeField] bool canMove = true;
     [SerializeField] bool isGrounded = true;
+    [SerializeField] bool canDash;
+    [SerializeField] bool isDashing;
+    [SerializeField] bool touchGround;
 
     private void Awake()
     {
@@ -33,11 +39,60 @@ public class PlayerController : MonoBehaviour
         Movement();
         Grip();
     }
+
+    private void Dash(float x, float y)
+    {
+        _animator.SetBool("dashing", true);
+        Vector3 playerPosition = Camera.main.WorldToViewportPoint(transform.position);
+        //Camera.main.GetComponent<RippleEffect>().Emit(playerPosition);
+        canDash = true;
+        _rb2d.linearVelocity = Vector2.zero;
+        _rb2d.linearVelocity += new Vector2(x, y).normalized * dashSpeed;
+        StartCoroutine(SetUpDash());
+    }
+
+    private IEnumerator SetUpDash()
+    {
+        StartCoroutine(GroundDash());
+        _rb2d.gravityScale = 0;
+        isDashing = true;
+        
+        yield return new WaitForSeconds(0.8f);
+
+        _rb2d.gravityScale = 1;
+        isDashing = false;
+        FinishDash();
+    }
+
+    private IEnumerator GroundDash()
+    {
+        yield return new WaitForSeconds(0.15f);
+        if(isGrounded)
+        {
+            canDash = false;
+        }
+    }
+
+    public void FinishDash()
+    {
+        _animator.SetBool("dashing", false);
+    }
+
+    private void TouchGround()
+    {
+        canDash = false;
+        isDashing = false;
+        _animator.SetBool("jumping", false);
+    }
+
     private void Movement()
     {
         float x = Input.GetAxis("Horizontal");
         float y = Input.GetAxis("Vertical");
         
+        float xRaw = Input.GetAxisRaw("Horizontal");
+        float yRaw = Input.GetAxisRaw("Vertical");
+
         direction = new Vector2(x, y);
         Walk();
         BetterJump();
@@ -49,9 +104,48 @@ public class PlayerController : MonoBehaviour
                 Jump();
             }
         }
-        if(isGrounded)
+
+        if(Input.GetKeyDown(KeyCode.X) && !isDashing)
         {
-            _animator.SetBool("falling", false);
+            if(xRaw != 0 || yRaw != 0)
+            {
+                Dash(xRaw, yRaw);
+                Debug.Log("Dash");
+            }
+        }
+
+        if (isGrounded && !touchGround)
+        {
+            TouchGround();
+            touchGround = true;
+        }
+
+        if (!isGrounded && touchGround)
+        {
+            touchGround = false;
+        }
+
+        float speed;
+        if (_rb2d.linearVelocity.y > 0)
+        {
+            speed = 1;
+        }
+        else
+        {
+            speed = -1f;
+        }
+
+        if (!isGrounded)
+        {
+            
+            _animator.SetFloat("verticalSpeed", speed);
+        }
+        else
+        {
+            if(speed == -1)
+            {
+                _animator.SetBool("jumping", false);
+            }
         }
     }
 
@@ -76,7 +170,7 @@ public class PlayerController : MonoBehaviour
 
     private void Walk()
     {
-        if(canMove)
+        if(canMove && !isDashing)
         {
             _rb2d.linearVelocity = new Vector2(direction.x * speedMovement, _rb2d.linearVelocity.y);
 
@@ -84,7 +178,7 @@ public class PlayerController : MonoBehaviour
             {
                 if(!isGrounded)
                 {
-                    _animator.SetBool("falling", true);
+                    _animator.SetBool("jumping", true);
                 }
                 else
                 {
@@ -109,10 +203,5 @@ public class PlayerController : MonoBehaviour
     private void Grip()
     {
         isGrounded = Physics2D.OverlapCircle((Vector2)transform.position + down, radiusDetection, ground);
-    }
-    public void JumpFinished()
-    {
-        _animator.SetBool("jumping", false);
-        _animator.SetBool("falling", true);
     }
 }
