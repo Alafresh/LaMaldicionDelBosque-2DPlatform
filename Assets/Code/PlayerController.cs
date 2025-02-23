@@ -1,11 +1,15 @@
 using System;
 using System.Collections;
+using Unity.Cinemachine;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
     private Vector2 direction;
-    
+
+    [Header("Cameras")]
+    [SerializeField] private CinemachineCamera _virtualCamera;
+
     [Header("Stadistics")]
     [SerializeField] float speedMovement = 10;
     [SerializeField] float forceJump = 10;
@@ -27,6 +31,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] bool canDash;
     [SerializeField] bool isDashing;
     [SerializeField] bool touchGround;
+    [SerializeField] bool shakingCamera;
 
     private void Awake()
     {
@@ -40,11 +45,22 @@ public class PlayerController : MonoBehaviour
         Grip();
     }
 
+    private IEnumerator ShakeCamera()
+    {
+        shakingCamera = true;;
+        CinemachineBasicMultiChannelPerlin noise = _virtualCamera.GetComponent<CinemachineBasicMultiChannelPerlin>();
+        noise.AmplitudeGain = 5;
+        yield return new WaitForSeconds(0.5f);
+        noise.AmplitudeGain = 0;
+        yield return new WaitForSeconds(0.3f);
+        shakingCamera = false;
+    }
+
     private void Dash(float x, float y)
     {
         _animator.SetBool("dashing", true);
         Vector3 playerPosition = Camera.main.WorldToViewportPoint(transform.position);
-        //Camera.main.GetComponent<RippleEffect>().Emit(playerPosition);
+        StartCoroutine(ShakeCamera());
         canDash = true;
         _rb2d.linearVelocity = Vector2.zero;
         _rb2d.linearVelocity += new Vector2(x, y).normalized * dashSpeed;
